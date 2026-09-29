@@ -12,7 +12,7 @@ from pyvikunja.models.project import Project
 from pyvikunja.models.task import Task
 
 from custom_components.vikunja import VikunjaDataUpdateCoordinator, DOMAIN, LOGGER
-from custom_components.vikunja.const import DATA_PROJECTS_KEY, DATA_TASKS_KEY
+from custom_components.vikunja.const import DATA_PROJECTS_KEY, DATA_TASKS_KEY, DATA_PROJECT_TASKS_KEY
 
 
 async def async_setup_entry(
@@ -104,8 +104,11 @@ class VikunjaTaskTodoListEntity(
         return f"todo_list_{self.project.id}"
 
     def tasks_for_project(self) -> list[Task]:
-        """Return tasks that belong to this project."""
-        return [task for task in self._coordinator.data[DATA_TASKS_KEY].values() if task.project_id == self._project_id]
+        """Return tasks that belong to this project or match this saved filter."""
+        all_tasks = self._coordinator.data[DATA_TASKS_KEY]
+        task_ids = self._coordinator.data[DATA_PROJECT_TASKS_KEY].get(self._project_id, [])
+
+        return [all_tasks[task_id] for task_id in task_ids if task_id in all_tasks]
 
     def task_by_id(self, id: int) -> Optional[Task]:
         """Return a single task by its ID, or None if not found."""
