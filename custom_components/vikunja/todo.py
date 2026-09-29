@@ -62,14 +62,6 @@ class VikunjaTaskTodoListEntity(
     """A To-do List representation of the Shopping List."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = (
-            TodoListEntityFeature.CREATE_TODO_ITEM |
-            TodoListEntityFeature.UPDATE_TODO_ITEM |
-            TodoListEntityFeature.DELETE_TODO_ITEM |
-            # TodoListEntityFeature.MOVE_TODO_ITEM |
-            TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM |
-            TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
-    )
 
     def __init__(
             self,
@@ -81,6 +73,23 @@ class VikunjaTaskTodoListEntity(
         self._base_url = base_url
         self._coordinator = coordinator
         self._project_id = project_id
+
+    @property
+    def supported_features(self) -> TodoListEntityFeature:
+        features = (
+                TodoListEntityFeature.UPDATE_TODO_ITEM |
+                TodoListEntityFeature.DELETE_TODO_ITEM |
+                # TodoListEntityFeature.MOVE_TODO_ITEM |
+                TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM |
+                TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        )
+
+        # Saved filters are exposed as pseudo-projects with negative IDs.
+        # They aren't real projects, so tasks can't be created inside them.
+        if self._project_id >= 0:
+            features |= TodoListEntityFeature.CREATE_TODO_ITEM
+
+        return features
 
     @property
     def project(self) -> Project:
